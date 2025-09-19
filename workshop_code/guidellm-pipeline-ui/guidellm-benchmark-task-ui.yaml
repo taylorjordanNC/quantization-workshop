@@ -1,0 +1,132 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: guidellm-benchmark-ui
+spec:
+  description: Run guidellm benchmark against an endpoint and extract results
+  params:
+    - default: 'http://llama32-3b.llama-serve.svc.cluster.local:8000/v1'
+      description: Target endpoint URL
+      name: target
+      type: string
+    - default: llama32
+      description: Model name identifier
+      name: model-name
+      type: string
+    - default: ibm-granite/granite-3.3-2b-instruct
+      description: Processor/model path
+      name: processor
+      type: string
+    - default: "prompt_tokens=800,output_tokens=128"
+      description: Data configuration JSON
+      name: data-config
+      type: string
+    - default: benchmark-results.yaml
+      description: Output filename
+      name: output-filename
+      type: string
+    - default: synchronous
+      description: Rate type for benchmark
+      name: rate-type
+      type: string
+    - default: '4'
+      description: Rate for benchmark
+      name: rate
+      type: string
+    - default: '30'
+      description: Maximum benchmark duration in seconds
+      name: max-seconds
+      type: string
+    - default: registry.access.redhat.com/ubi9/python-311
+      description: Guidellm container image
+      name: guidellm-image
+      type: string
+    - default: f2f1423XXXXXXXXXXX8f39b6a3e5b25
+      description: OpenAI API key for authentication
+      name: api-key
+      type: string
+    - default: '10'
+      description: Maximum concurrency for benchmark
+      name: max-concurrency
+      type: string
+    - default: your-huggingface-token-here
+      description: Hugging Face token for accessing gated models
+      name: huggingface-token
+      type: string
+  results:
+    - description: The benchmark results.
+      name: benchmark-results
+      type: string
+  steps:
+    - computeResources: {}
+      env:
+        - name: GUIDELLM__OPENAI__API_KEY
+          value: $(params.api-key)
+        - name: GUIDELLM__MAX_CONCURRENCY
+          value: $(params.max-concurrency)
+        - name: REQUESTS_CA_BUNDLE
+          value: /etc/ssl/certs/ca-bundle.crt
+        - name: SSL_CERT_FILE
+          value: /etc/ssl/certs/ca-bundle.crt
+      image: registry.access.redhat.com/ubi9/python-311
+      name: run-benchmark
+      script: |
+        #!/bin/bash
+        set -e # Exit immediately if a command fails
+
+        export REQUESTS_CA_BUNDLE="/etc/ssl/certs/ca-bundle.crt"
+
+        echo "--- Installing guidellm ---"
+        pip install git+https://github.com/vllm-project/guidellm.git
+
+        # Create timestamped directory
+        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+        echo "--- Starting benchmark ---"
+        COLUMNS=500 guidellm benchmark \
+          --target="$(params.target)" \
+          --model="$(params.model-name)" \
+          --processor="$(params.processor)" \
+          --data="$(params.data-config)" \
+          --output-path="$(workspaces.shared-workspace.path)/$(params.output-filename)" \
+          --rate-type="$(params.rate-type)" \
+          --rate="$(params.rate)" \
+          --max-seconds="$(params.max-seconds)" > benchmark_${TIMESTAMP}.txt
+
+        echo "Extracting and organizing benchmark results..."
+
+        RESULT_DIR="$(params.model-name)_${TIMESTAMP}"
+        mkdir -p $RESULT_DIR
+
+        # Copy and organize results
+        if [ -f "$(params.output-filename)" ]; then
+          cp "$(params.output-filename)" "$RESULT_DIR/"
+          
+          # Create summary info
+          cat > "$RESULT_DIR/benchmark_info.txt" << EOF
+        Model: $(params.model-name)
+        Target: $(params.target)
+        Processor: $(params.processor)
+        Data Config: $(params.data-config)
+        Rate Type: $(params.rate-type)
+        Max Seconds: $(params.max-seconds)
+        Timestamp: $TIMESTAMP
+        EOF
+          
+          # Set timestamp for next task in pipeline
+          echo "$TIMESTAMP" > timestamp.txt
+          
+          # Package results
+          tar czf "${RESULT_DIR}_rate_$(params.rate).tar.gz" "$RESULT_DIR"
+          
+          echo "Results packaged to: ${RESULT_DIR}.tar.gz"
+          echo "Contents of workspace:"
+          ls -la
+        else
+          echo "ERROR: Benchmark output file not found: $(params.output-filename)"
+          exit 1
+        fi
+      workingDir: $(workspaces.shared-workspace.path)
+  workspaces:
+    - description: Shared workspace for storing benchmark results
+      name: shared-workspace

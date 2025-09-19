@@ -1,0 +1,82 @@
+:imagesdir: ../assets/images
+
+[#deploy-rhoai]
+# Deploy model with vLLM on OpenShift AI with Helm, kserve and model car
+
+1. Log into your provided OpenShift environment. 
+
+We will use a helm deployment to deploy our model-car on vLLM in OpenShift AI. This helm chart is designed to be easily reusable and we recommend starting with this base for your deployments in the future! Everything is open source for public use.
+
+You may view the helm chart at this link: https://github.com/redhat-ai-services/helm-charts/tree/main/charts/vllm-kserve.
+
+Let's take a look at our first provided custom values file for this workshop(etx-ai-presales/workshop_code/deploy_vllm/vllm_rhoai_custom_1/values.yaml):
+
+[source,console,subs=attributes+]
+----
+deploymentMode: RawDeployment
+
+fullnameOverride: granite-8b
+model:
+  modelNameOverride: granite-8b
+  uri: oci://quay.io/redhat-ai-services/modelcar-catalog:granite-3.3-8b-instruct
+  args:
+    - "--max-model-len=130000"
+    - "--enable-auto-tool-choice"
+    - "--tool-call-parser=granite"
+    - "--chat-template=/app/data/template/tool_chat_template_granite.jinja"
+
+image:
+  # -- The vLLM model server image
+  image: 'quay.io/modh/vllm'
+
+  # -- The tag or sha for the model server image
+  tag: rhoai-2.22-cuda-5e9c649953464aa3a668aba1774e42fc933f721b
+
+  # -- The vLLM version that will be displayed in the RHOAI Dashboard.  If not set, the appVersion of the chart will be used.
+  runtimeVersionOverride: ""
+----
+
+You could substitute the modelcar for a different model and adjust the arguments as desired using vLLM standard args: https://docs.vllm.ai/en/stable/configuration/engine_args.html#named-arguments. 
+
+View our available modelcars here: https://quay.io/repository/redhat-ai-services/modelcar-catalog?tab=tags
+
+NOTE: For the purposes of this workshop, we will not adjust our preset configuration and model, but we want you to know how it's possible! 
+
+## Deploy the vLLM model car chart
+
+## Log into the OpenShift via the CLI
+
+Find your OpenShift login command in the openshift console by going to the admin dropdown and selecting **Copy Login Command**.
+
+image::copy-login-command.png[]
+
+Once selected, you will click **Display token** and copy the oc login command provided.
+
+image::oc-login.png[]
+
+### Add the redhat-ai-services helm chart repository
+
+[source,console,role=execute,subs=attributes+]
+----
+helm repo add redhat-ai-services https://redhat-ai-services.github.io/helm-charts/
+helm repo update redhat-ai-services
+----
+
+### Deploy helm chart in llm-hosting namespace
+
+Run the following commands to deploy our vLLM-kserve helm chart. The chart version we are using is published, but we will be deploying it from our cloned repository so that we may view files and make any changes if desired.
+
+Create a new project to deploy the model to.
+
+[source,console,role=execute,subs=attributes+]
+----
+oc new-project vllm
+----
+
+NOTE: Ensure you're in the **quantization-workshop** cloned repository in your local environment before continuing.
+
+[source,console,role=execute,subs=attributes+]
+----
+helm install granite-2b redhat-ai-services/vllm-kserve --version 0.5.11 \
+  -f workshop_code/deploy_vllm/vllm_rhoai_custom_1/values.yaml 
+----

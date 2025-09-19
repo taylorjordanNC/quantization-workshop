@@ -1,0 +1,54 @@
+:imagesdir: ../assets/images
+[#deploy-intro]
+= Module 1: Deploying your model with vLLM on OpenShift AI
+
+== Introduction
+
+This module covers deploying a Gen AI model with vLLM as the inference runtime on an OpenShift AI cluster.
+
+## Learning Objectives
+
+- Deploy vLLM across three enterprise platforms
+- Understand platform-specific configuration requirements
+- Compare deployment architectures and operational trade-offs
+- Establish foundation for performance evaluation and optimization
+
+## Prerequisites
+
+- Access to target deployment environments
+- Basic familiarity with containers and Kubernetes concepts
+- Understanding of LLM serving requirements
+
+== Preparing our environment
+
+You currently are working with an OpenShift cluster with OpenShift AI deployed on top of that kubernetes cluster. We have one GPU node. Before we can get started, we need to do two things:
+
+1. Scale up our GPU node to 2, so that we have two L4 GPUs available to us for our work.
+
+2. Deploy MinIO for storage where our resulting quantized model files will be stored. 
+
+== Scaling up to two GPUs
+
+1. Navigate to the OpenShift console.
+
+2. Ensure you are using the Administrator perspective.
+
++
+image::admin_perspective.png[]
++
+
+3. Go to the **Compute** -> **MachineSets** section of the navigation menu. 
+
+image::compute_machineset.png[width=70%]
+
+== Deploying MinIO
+
+== Install the OpenShift CLI tool
+
+Please install the OpenShift CLI tool for your system using the following link: https://docs.okd.io/4.19/cli_reference/openshift_cli/getting-started-cli.html
+
+== Install Helm 
+
+Install the Helm CLI at the following link: https://helm.sh/docs/intro/install/
+
+Ready to deploy? Let's go!

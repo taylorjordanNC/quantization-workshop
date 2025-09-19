@@ -1,0 +1,321 @@
+:imagesdir: ../assets/images
+
+[#eval-performance]
+# Evaluating Model Performance with GuideLLM
+// TODO: Review and add more info around the parameters being changed in the different runs.
+In Generative AI systems, evaluating system performance including latency, throughput, and resource utilization is just as important as evaluating model accuracy or quality. Here's why:
+
+. **User Experience**: High latency leads to sluggish interactions, which is unacceptable in chatbots, copilots, and real-time applications. Users expect sub-second responses.
+
+. **Scalability**: Throughput determines how many requests a system can handle in parallel. For enterprise GenAI apps, high throughput is essential to serve multiple users or integrate with high-frequency backend processes.
+
+. **Cost Efficiency**: Slow or inefficient systems require more compute to serve the same volume of requests. Optimizing performance directly reduces cloud GPU costs and improves ROI.
+
+. **Fair Benchmarking**: A model may appear “better” in isolated evaluation, but if it requires excessive inference time or hardware, it may not be viable in production. True model evaluation must balance quality and performance.
+
+. **Deployment Readiness**: Latency and throughput impact architectural decisions (e.g., batching, caching, distributed serving). Measuring them ensures a model is viable under real-world constraints.
+
+## What is GuideLLM?
+
+GuideLLM is a toolkit for evaluating and optimizing the deployment of LLMs. By simulating real-world inference workloads, GuideLLM enables you to easily assess the performance, resource requirements, and cost implications of deploying LLMs on various hardware configurations. This approach ensures efficient, scalable, and cost-effective LLM inference serving while maintaining high service quality.
+
+GuideLLM is now officially a part of the vLLM upstream project. This toolset is one of the primary ways Red Hat internal teams are benchmarking customer models. GuideLLM will be the main framework we will recommend to our customers with the scope of model performance and optimization. 
+
+## Set Up GuideLLM tekton pipeline
+
+There are several current ways you may deploy and use GuideLLM.
+
+* CLI tool: documented in the upstream project.
+* Python library: Not yet in current upstream documentation. You can see an example here in this guide: https://redhatquickcourses.github.io/genai-vllm/genai-vllm/1/rhoai_deploy/guide_llm.html. 
+* Kubernetes job: https://github.com/rh-aiservices-bu/guidellm-pipeline 
+* Tekton pipeline: https://github.com/jhurlocker/guidellm-pipeline.git (forked from above repo) 
+** Run the below command to install the Tekton CLI if you do not have it already installed.
++
+[source,console,role=execute,subs=attributes+]
+----
+curl -sL $(curl -s https://api.github.com/repos/tektoncd/cli/releases/latest | grep "browser_download_url.*_Linux_x86_64.tar.gz" | cut -d '"' -f 4) | sudo tar -xz -C /usr/local/bin tkn
+tkn version
+----
+
+NOTE: This will prompt you for your computer's password.
+
+For our lab today, we will utilize the tekton pipeline on our OpenShift AI cluster. A pipeline deployment provides the following benefits:
+
+* Automation and reproducibility
+* Cloud-native / kubernetes-native
+* Scalability and resource optimization: benchmarking can be resource intensive particularly when simulating high loads or testing large models. The dynamic provisioning/de-provisioning of necessary resources with tekton can handle this well which is particularly critical for the expensive compute
+* Modular
+* Integration with existing MLOps workflows
+* Version control / auditability
+* Better handling of complex, multi-stage workflows
+
+First we will apply the PVC, task, and pipeline. We'll also create an s3 bucket in Minio where the pipeline will upload the benchmark results. The necessary files are in repository you have already cloned. This is a rudimentary deployment due to workshop timing restrictions and we would have this instead in a kustomize or helm deployment, depending on your preference.
+
+[source,console,role=execute,subs=attributes+]
+----
+oc apply -f workshop_code/guidellm-pipeline/upload-results-task.yaml -n vllm
+oc apply -f workshop_code/guidellm-pipeline/guidellm-pipeline.yaml -n vllm
+oc apply -f workshop_code/guidellm-pipeline/pvc.yaml -n vllm
+oc apply -f workshop_code/guidellm-pipeline/guidellm-benchmark-task.yaml -n vllm
+oc apply -f workshop_code/guidellm-pipeline/mino-bucket.yaml -n vllm
+----
+
+Before running the pipeline, let's review the options for GuideLLM more closely.
+
+## GuideLLM Arguments
+
+* Peruse the available GuideLLM https://github.com/neuralmagic/guidellm?tab=readme-ov-file#configurations[configuration options]. 
+* The GitHub ReadMe gives detailed information about configuration flags
+
+### Input/Output tokens
+For different use cases, you can set different standardized dataset profiles that can be passed in as arguments in GuideLLM. For example, the following variables represent input and output tokens, respectively, based on the given use case: 
+
+* **Chat (512/256)**
+* **RAG (4096/512)**
+* **Summarization (1024/256)**
+* **Code Generation (512/512)**
+
+Using these profiles, we can map specific i/o token scenarios to real-world use cases to make these runs more explainable to how this impacts applications.
+
+### --rate-type
+
+**--rate-type** defines the type of benchmark to run. By default GuideLLM will do a sweep of available benchmarks, but you may choose to isolate specific benchmark tests. 
+
+* synchronous: Runs a single stream of requests one at a time. --rate must not be set for this mode.
+* throughput: Runs all requests in parallel to measure the maximum throughput for the server (bounded by GUIDELLM__MAX_CONCURRENCY config argument). --rate must not be set for this mode.
+* concurrent: Runs a fixed number of streams of requests in parallel. --rate must be set to the desired concurrency level/number of streams.
+* constant: Sends requests asynchronously at a constant rate set by --rate.
+* poisson: Sends requests at a rate following a Poisson distribution with the mean set by --rate.
+* sweep: Automatically determines the minimum and maximum rates the server can support by running synchronous and throughput benchmarks, and then runs a series of benchmarks equally spaced between the two rates. The number of benchmarks is set by --rate (default is 10).
+
+### --data
+
+GuideLLM has a default dataset it uses if you do not specify anything specific. However, the dataset you use should align directly with your use case. 
+
+## Use-Case Specific Data Requirements
+
+### Training vs Production Data
+
+**This training uses emulated data** for consistency:
+```json
+{"type":"emulated","prompt_tokens":512,"output_tokens":128}
+```
+**For client engagements**, use representative data for accurate performance evaluation.
+
+### Why Using Real Use-Case Specific Data Matters
+
+Real workloads differ significantly from stock data:
+
+- **Token distribution**: Customer support (50-200 tokens typical) vs RAG (4K+ tokens)
+- **Response variability**: Fixed 128 tokens vs 50-800 token range in production
+- **Processing patterns**: Math reasoning vs creative writing stress different components
+
+**Performance Impact**: Real data typically shows 25-40% higher latency variance and 2-5x difference in P99 metrics.
+
+## Verify your model deployment is ready
+
+* Login to OpenShift AI and go to the **vllm** Data Science Project. Wait until the model fully deploys (green check) before continuing. 
+
+image::granite-deployed-rhoai.png[Granite deployed on RHOAI]
+
+You may then use your preferred method(s) to verify the successful deployment. We are not exposing an external route and the llm-hosting namespace within which we deployed the model has a network policy that blocks traffic from other namespaces. We will use a pod to curl the model.
+
+## Execute the pipeline
+
+Set your external model inference endpoint.
+
+[source,console,role=execute,subs=attributes+]
+----
+export INFERENCE_ENDPOINT=$(oc get inferenceservice granite-2b -n vllm -o jsonpath='{.status.url}')
+----
+
+Run the pipeline with necessary parameters in a terminal. Accept the defaults when prompted.
+
+[source,console,role=execute,subs=attributes+]
+----
+tkn pipeline start guidellm-benchmark-pipeline -n vllm \
+  --param target=$INFERENCE_ENDPOINT/v1 \
+  --param model-name="granite-2b" \
+  --param processor="ibm-granite/granite-3.3-2b-instruct" \
+  --param data-config="prompt_tokens=512,output_tokens=128" \
+  --param max-seconds="30" \
+  --param huggingface-token="" \
+  --param api-key="" \
+  --param rate="2" \
+  --param rate-type="sweep" \
+  --param max-concurrency="10" \
+  --workspace name=shared-workspace,claimName=guidellm-output-pvc  
+----
+
+Running this command will provide you another command to follow the pipeline as it runs. You may use the CLI or OpenShift console UI to view the pipeline run progression.
+
+If in the UI:
+
+1. Navigate to PipelineRuns in the vllm namespace and select the v1 version of PipelineRun.
+
++
+image::find-pipelineruns.png[]
++
+
+2. Ensure you're in the right namespace.
+
++
+image::find-project-plr.png[]
++
+
+3. Select the **Instances** tab and select your pipeline run.
+
++
+image::plr-instances.png[]
++
+
+4. Take a look at your PipelineRun details.
+
+5. Download the benchmark results from the *guidellm-benchmark* bucket in Minio and open the *benchmark-<TIMESTAMP>.txt* in a text editor.
+
+To get to the MinIO user interface, get the route to the Minio UI. The login is:
+
+User: *minio*
+Password: *minio123*
+
+[source,console,role=execute,subs=attributes+]
+----
+oc get route minio-ui -n minio -o jsonpath='{.spec.host}'
+----
+
+Open this link in your browser. You will see the following:
+
+Minio bucket
+
+image::benchmark_results_file_in_minio.png[benchmark results in Minio]
+
+Benchmark results
+
+image::benchmark_results_minio.png[benchmark results]
+
+Download that benchmark .txt file and open it in your local preferred text editor.
+
+## Evaluate Output and Adjust GuideLLM Settings
+
+GuideLLM captures the following metrics during a full sweep:
+
+. **Requests per Second**: Total requests completed per second
+
+. **Request concurrency**: average concurrent requests
+
+. **Output token per second (mean)**: output tokens per second
+
+. **Total tokens per second (mean)**: total (prompt + output) tokens per second
+
+. **Request latency in ms (mean, median, p99)**: total end to end request latency
+
+. **Time to First Token (mean, median, p99)**
+
+. **Inter-Token Latency (mean, median, p99)**
+
+. **Time per output token (mean, median, p99)**
+
+See the complete https://github.com/neuralmagic/guidellm/blob/main/docs/metrics.md[metrics documentation^]. 
+
+### Reading Output
+
+#### Top Section (Benchmark Info)
+
+* Benchmark: The type of benchmark ran
+- constant@x indicates the number of requests sent constantly to the model per second.
+* Requests Made: How many requests issued (completed, incomplete or errors)
+* Token Data
+- Tok/Req: average tokens per request
+- Tok Total: total number of input/output tokens processed
+
+#### Bottom Section (Benchmark Stats)
+
+* Mean
+- Overall average
+- Good for general performance overview
+
+* Median
+- Typical experience
+- More stable, less skewed by outliers
+
+* P99
+- Worst-case real latency
+- Essential for SLOs and user experience under load
+
+### Adjusting GuideLLM Settings
+
+Depending on the results, you would try running GuideLLM a couple of different ways to see how the different controlled tests impact results.
+
+## GuideLLM UI and RAG (Retrieval-Augmented Generation) Simulation
+
+There are many ways you may visualize the benchmark data. However, the GuideLLM team provides a great way to visualize the data in a web browser. This UI spec could also be taken and containerized to include in your OpenShift deployment. Let's see what this could look like with simple html browser access.
+
+Add our UI-specific GuideLLM pipeline manifests:
+
+[source,console,role=execute,subs=attributes+]
+----
+oc apply -f workshop_code/guidellm-pipeline-ui/guidellm-pipeline-ui.yaml -n vllm
+oc apply -f workshop_code/guidellm-pipeline-ui/guidellm-benchmark-task-ui.yaml -n vllm
+oc apply -f workshop_code/guidellm-pipeline-ui/upload-results-task-ui.yaml -n vllm
+----
+
+Now, complete another benchmark run, this time with a specified output path to `html` format. We are also changing the data-config parameter to simulate a RAG use case with a large context window. 
+
+[source,console,role=execute]
+----
+tkn pipeline start guidellm-benchmark-pipeline-ui -n vllm \
+  --param target=$INFERENCE_ENDPOINT/v1 \
+  --param model-name="granite-2b" \
+  --param processor="ibm-granite/granite-3.3-2b-instruct" \
+  --param data-config="prompt_tokens=4096,output_tokens=512" \
+  --param max-seconds="30" \
+  --param huggingface-token="" \
+  --param api-key="" \
+  --param rate="2" \
+  --param rate-type="sweep" \
+  --param max-concurrency="10" \
+  --param output-path="benchmarks.html" \
+  --workspace name=shared-workspace,claimName=guidellm-output-pvc
+----
+
+Track this pipeline run in the OpenShift Console UI as we did previously. This will now be under a new UI-specific pipeline.
+
+image::ui-pipeline.png[]
+
+Once complete, you will go back to the Minio Console to retrieve the tar file:
+
+image::download-tar.png[]
+
+You will download this file to your local machine, open the folder, and open the resulting `benchmarks.html` file in your preferred browser. You will see the following:
+
+image::guidellm-ui.png[]
+
+### Troubleshooting Performance Issues
+
+#### High Latency Diagnosis
+1. **TTFT > ITL**: Memory bandwidth or model loading bottleneck
+2. **ITL >> TTFT**: Compute or batching inefficiency
+3. **Both High**: Infrastructure under-sizing or configuration issues
+
+#### Low Throughput Diagnosis  
+1. **Compare synchronous vs throughput**: Reveals batching effectiveness
+2. **Monitor GPU utilization**: Low utilization indicates non-GPU bottlenecks
+3. **Analyze queue depths**: High queuing suggests insufficient parallelism
+
+#### Inconsistent Performance Diagnosis
+1. **P99 >> Median**: Resource contention or thermal throttling
+2. **Variable between runs**: External factors or inadequate warm-up
+3. **Degradation over time**: Memory leaks or resource exhaustion
+
+## Uninstall Model Deployment
+
+We will need the available GPU resources for the next module. To uninstall our model deployment and free up these resources, run the following command:
+
+[source,console,role=execute,subs=attributes+]
+----
+helm uninstall granite-2b
+----
+
+## Summary
+
+This activity demonstrated how to evaluate system performance using GuideLLM with a default vLLM configuration. By configuring vLLM more precisely or your chosen inference runtime, you can better align model serving with application needs—whether you’re optimizing for cost, speed, or user experience.

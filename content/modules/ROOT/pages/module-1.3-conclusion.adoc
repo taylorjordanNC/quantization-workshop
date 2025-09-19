@@ -1,0 +1,9 @@
+[#deploy-conclusion]
+= Conclusion
+
+You just successfully deployed a Gen AI model with vLLM using Helm on Kubernetes! 
+
+It will take about 10 minutes for the model deployment to be ready.
+
+While we wait - we will move on to learning about model benchmarks and evaluations.
+
