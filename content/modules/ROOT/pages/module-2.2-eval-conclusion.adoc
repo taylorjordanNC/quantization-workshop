@@ -1,8 +1,8 @@
 :imagesdir: ../assets/images
 [#eval-conclusion]
-# Conclusion: From Evaluation to Impact
+= Conclusion: From Evaluation to Impact
 
-## Why Evaluation Matters in Production
+== Why Evaluation Matters in Production
 
 Model evaluation isn’t just a checkbox—it’s the foundation for building robust, responsible, and scalable GenAI systems.
 
@@ -14,7 +14,7 @@ These evaluations aren't theoretical—they directly support:
 
 * **Risk mitigation**: Will it behave reliably in edge cases?
 
-## Bringing This to Your Workflow
+== Bringing This to Your Workflow
 
 Ask yourself these questions as you move forward with production LLM systems:
 

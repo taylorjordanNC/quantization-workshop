@@ -6,14 +6,14 @@
 
 This module covers deploying a Gen AI model with vLLM as the inference runtime on an OpenShift AI cluster.
 
-## Learning Objectives
+== Learning Objectives
 
 - Deploy vLLM across three enterprise platforms
 - Understand platform-specific configuration requirements
 - Compare deployment architectures and operational trade-offs
 - Establish foundation for performance evaluation and optimization
 
-## Prerequisites
+== Prerequisites
 
 - Access to target deployment environments
 - Basic familiarity with containers and Kubernetes concepts
@@ -21,29 +21,241 @@ This module covers deploying a Gen AI model with vLLM as the inference runtime o
 
 == Preparing our environment
 
-You currently are working with an OpenShift cluster with OpenShift AI deployed on top of that kubernetes cluster. We have one GPU node. Before we can get started, we need to do two things:
+You currently are working with an OpenShift cluster with OpenShift AI deployed on top of that kubernetes cluster. We have one GPU node. 
 
-1. Scale up our GPU node to 2, so that we have two L4 GPUs available to us for our work.
+=== Deploying MinIO
 
-2. Deploy MinIO for storage where our resulting quantized model files will be stored. 
+**Create a Data Science Project where we will deploy MinIO**
 
-== Scaling up to two GPUs
+1. In the Red Hat OpenShift AI user interface, create a data science project.
+2. Simply navigate to Data Science Projects
+3. Click Create Project
+4. Name the project `minio`. Ensure the resource name field matches.
 
-1. Navigate to the OpenShift console.
+**Go back to OpenShift Console**
 
-2. Ensure you are using the Administrator perspective.
+image::openshift.console.png[]
+
+1. Make sure you're in the administrator view, not the developer view.
+2. Go to workloads, then pods, and confirm the selected project is correct.
 
 +
-image::admin_perspective.png[]
+image::workloads.pods.png[]
 +
 
-3. Go to the **Compute** -> **MachineSets** section of the navigation menu. 
+3. You now have a project, otherwise known as a namespace, to deploy MinIO.
 
-image::compute_machineset.png[width=70%]
+**Deploy MinIO**
 
-== Deploying MinIO
+1. Click on the +("Import YAML") button.
 
-== Install the OpenShift CLI tool
+image::import.yaml.png[]
+
+2. Paste the following YAML into the box.
+
++
+[source,yaml,role=execute]
+----
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: minio-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 40Gi
+  volumeMode: Filesystem
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: minio-secret
+stringData:
+  # change the username and password to your own values.
+  # ensure that the user is at least 3 characters long and the password at least 8
+  minio_root_user: minio
+  minio_root_password: minio123
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: minio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: minio
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: minio-pvc
+      containers:
+        - resources:
+            limits:
+              cpu: 250m
+              memory: 1Gi
+            requests:
+              cpu: 20m
+              memory: 100Mi
+          readinessProbe:
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: minio
+          livenessProbe:
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
+            periodSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: minio_root_user
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-secret
+                  key: minio_root_password
+          ports:
+            - containerPort: 9000
+              protocol: TCP
+            - containerPort: 9090
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: data
+              mountPath: /data
+              subPath: minio
+          terminationMessagePolicy: File
+          image: >-
+            quay.io/minio/minio:latest
+          args:
+            - server
+            - /data
+            - --console-address
+            - :9090
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: minio-service
+spec:
+  ipFamilies:
+    - IPv4
+  ports:
+    - name: api
+      protocol: TCP
+      port: 9000
+      targetPort: 9000
+    - name: ui
+      protocol: TCP
+      port: 9090
+      targetPort: 9090
+  internalTrafficPolicy: Cluster
+  type: ClusterIP
+  ipFamilyPolicy: SingleStack
+  sessionAffinity: None
+  selector:
+    app: minio
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: minio-api
+spec:
+  to:
+    kind: Service
+    name: minio-service
+    weight: 100
+  port:
+    targetPort: api
+  wildcardPolicy: None
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: minio-ui
+spec:
+  to:
+    kind: Service
+    name: minio-service
+    weight: 100
+  port:
+    targetPort: ui
+  wildcardPolicy: None
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+----
++
+
+3. Press Create.
+
+4. You should see:
+
++
+image::resources.created.png[]
++
+
+5. You will see a minio pod in the pods section of the console running. You will also see two routes:
+
+image::routes.png[]
+
+=== Creating Buckets in MinIO
+
+**Log into MinIO**
+
+1. Locate the minio-ui Route, and open its location URL in a web browser:
+
+2. When prompted, log in
+
+* user: minio
+* pass: minio123
+
+3. You should now be logged into your MinIO instance.
+
+**Create buckets**
+
+1. Click on **create a bucket**
+
+2. Name the first one `models`. Click create bucket.
+
+3. Create a second bucket named `pipelines`. Click create bucket.
+
+We will use these buckets during the workshop.
+
+=== Install the OpenShift CLI tool
 
 Please install the OpenShift CLI tool for your system using the following link: https://docs.okd.io/4.19/cli_reference/openshift_cli/getting-started-cli.html
 

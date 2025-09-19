@@ -1,0 +1,62 @@
+:imagesdir: ../assets/images
+
+[#quantization-testing]
+= Deploying and Testing our Quantized Model
+
+Now that we have quantized our model, we can deploy it and run another benchmark test.
+
+== Deploying the Model from MinIO
+
+1. Go to the `quantization` project in the OpenShift AI dashboard.
+
+2. Click on the Models tab. Enable `Single-Model Serving`.
+
+3. Click on the `Deploy Model` button.
++
+image::deploy_model.png[]
++
+4. Fill the form with the following values (anything not specified below, leave as is):
+
+* Model deployment name: `quantized-granite`
+* Serving runtime: `vLLM NVIDIA GPU ServingRuntime for KServe`
+* Accelerator: `NVIDIA GPU`
+* Model route: Check `Make deployed models available through an external route.`
+* Source model location:
+** Check `Existing connection`
+** Select `minio-models`
+** Path: `granite-int4-pipeline`
+
+5. Your model is deployed when you see a green check mark in the UI. 
+
+image::success.png[]
+
+== Benchmarking our new quantized model
+
+Set your external model inference endpoint.
+
+[source,console,role=execute,subs=attributes+]
+----
+export INFERENCE_ENDPOINT=$(oc get inferenceservice quantized-granite -n quantization -o jsonpath='{.status.url}')
+----
+
+Now, complete another benchmark run, with a specified output path to `html` format. We will simulate the RAG use case again so you may compare against your last results more easily in a browser.
+
+[source,console,role=execute]
+----
+tkn pipeline start guidellm-benchmark-pipeline-ui -n vllm \
+  --param target=http://quantized-granite.quantization.svc.cluster.local/v1 \
+  --param model-name="quantized-granite" \
+  --param processor="ibm-granite/granite-3.3-2b-instruct" \
+  --param data-config="prompt_tokens=4096,output_tokens=512" \
+  --param max-seconds="30" \
+  --param huggingface-token="" \
+  --param api-key="" \
+  --param rate="2" \
+  --param rate-type="sweep" \
+  --param max-concurrency="10" \
+  --param output-path="benchmarks.html" \
+  --workspace name=shared-workspace,claimName=guidellm-output-pvc
+----
+
+
+

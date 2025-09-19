@@ -1,7 +1,7 @@
 :imagesdir: ../assets/images
 
 [#eval-performance]
-# Evaluating Model Performance with GuideLLM
+= Evaluating Model Performance with GuideLLM
 // TODO: Review and add more info around the parameters being changed in the different runs.
 In Generative AI systems, evaluating system performance including latency, throughput, and resource utilization is just as important as evaluating model accuracy or quality. Here's why:
 
@@ -15,13 +15,13 @@ In Generative AI systems, evaluating system performance including latency, throu
 
 . **Deployment Readiness**: Latency and throughput impact architectural decisions (e.g., batching, caching, distributed serving). Measuring them ensures a model is viable under real-world constraints.
 
-## What is GuideLLM?
+== What is GuideLLM?
 
 GuideLLM is a toolkit for evaluating and optimizing the deployment of LLMs. By simulating real-world inference workloads, GuideLLM enables you to easily assess the performance, resource requirements, and cost implications of deploying LLMs on various hardware configurations. This approach ensures efficient, scalable, and cost-effective LLM inference serving while maintaining high service quality.
 
 GuideLLM is now officially a part of the vLLM upstream project. This toolset is one of the primary ways Red Hat internal teams are benchmarking customer models. GuideLLM will be the main framework we will recommend to our customers with the scope of model performance and optimization. 
 
-## Set Up GuideLLM tekton pipeline
+== Set Up GuideLLM tekton pipeline
 
 There are several current ways you may deploy and use GuideLLM.
 
@@ -62,12 +62,12 @@ oc apply -f workshop_code/guidellm-pipeline/mino-bucket.yaml -n vllm
 
 Before running the pipeline, let's review the options for GuideLLM more closely.
 
-## GuideLLM Arguments
+== GuideLLM Arguments
 
 * Peruse the available GuideLLM https://github.com/neuralmagic/guidellm?tab=readme-ov-file#configurations[configuration options]. 
 * The GitHub ReadMe gives detailed information about configuration flags
 
-### Input/Output tokens
+=== Input/Output tokens
 For different use cases, you can set different standardized dataset profiles that can be passed in as arguments in GuideLLM. For example, the following variables represent input and output tokens, respectively, based on the given use case: 
 
 * **Chat (512/256)**
@@ -77,7 +77,7 @@ For different use cases, you can set different standardized dataset profiles tha
 
 Using these profiles, we can map specific i/o token scenarios to real-world use cases to make these runs more explainable to how this impacts applications.
 
-### --rate-type
+=== --rate-type
 
 **--rate-type** defines the type of benchmark to run. By default GuideLLM will do a sweep of available benchmarks, but you may choose to isolate specific benchmark tests. 
 
@@ -88,13 +88,13 @@ Using these profiles, we can map specific i/o token scenarios to real-world use 
 * poisson: Sends requests at a rate following a Poisson distribution with the mean set by --rate.
 * sweep: Automatically determines the minimum and maximum rates the server can support by running synchronous and throughput benchmarks, and then runs a series of benchmarks equally spaced between the two rates. The number of benchmarks is set by --rate (default is 10).
 
-### --data
+=== --data
 
 GuideLLM has a default dataset it uses if you do not specify anything specific. However, the dataset you use should align directly with your use case. 
 
-## Use-Case Specific Data Requirements
+== Use-Case Specific Data Requirements
 
-### Training vs Production Data
+=== Training vs Production Data
 
 **This training uses emulated data** for consistency:
 ```json
@@ -102,7 +102,7 @@ GuideLLM has a default dataset it uses if you do not specify anything specific. 
 ```
 **For client engagements**, use representative data for accurate performance evaluation.
 
-### Why Using Real Use-Case Specific Data Matters
+=== Why Using Real Use-Case Specific Data Matters
 
 Real workloads differ significantly from stock data:
 
@@ -112,7 +112,7 @@ Real workloads differ significantly from stock data:
 
 **Performance Impact**: Real data typically shows 25-40% higher latency variance and 2-5x difference in P99 metrics.
 
-## Verify your model deployment is ready
+== Verify your model deployment is ready
 
 * Login to OpenShift AI and go to the **vllm** Data Science Project. Wait until the model fully deploys (green check) before continuing. 
 
@@ -120,7 +120,7 @@ image::granite-deployed-rhoai.png[Granite deployed on RHOAI]
 
 You may then use your preferred method(s) to verify the successful deployment. We are not exposing an external route and the llm-hosting namespace within which we deployed the model has a network policy that blocks traffic from other namespaces. We will use a pod to curl the model.
 
-## Execute the pipeline
+== Execute the pipeline
 
 Set your external model inference endpoint.
 
@@ -195,7 +195,7 @@ image::benchmark_results_minio.png[benchmark results]
 
 Download that benchmark .txt file and open it in your local preferred text editor.
 
-## Evaluate Output and Adjust GuideLLM Settings
+== Evaluate Output and Adjust GuideLLM Settings
 
 GuideLLM captures the following metrics during a full sweep:
 
@@ -217,7 +217,7 @@ GuideLLM captures the following metrics during a full sweep:
 
 See the complete https://github.com/neuralmagic/guidellm/blob/main/docs/metrics.md[metrics documentation^]. 
 
-### Reading Output
+=== Reading Output
 
 #### Top Section (Benchmark Info)
 
@@ -242,11 +242,11 @@ See the complete https://github.com/neuralmagic/guidellm/blob/main/docs/metrics.
 - Worst-case real latency
 - Essential for SLOs and user experience under load
 
-### Adjusting GuideLLM Settings
+=== Adjusting GuideLLM Settings
 
 Depending on the results, you would try running GuideLLM a couple of different ways to see how the different controlled tests impact results.
 
-## GuideLLM UI and RAG (Retrieval-Augmented Generation) Simulation
+== GuideLLM UI and RAG (Retrieval-Augmented Generation) Simulation
 
 There are many ways you may visualize the benchmark data. However, the GuideLLM team provides a great way to visualize the data in a web browser. This UI spec could also be taken and containerized to include in your OpenShift deployment. Let's see what this could look like with simple html browser access.
 
@@ -290,7 +290,7 @@ You will download this file to your local machine, open the folder, and open the
 
 image::guidellm-ui.png[]
 
-### Troubleshooting Performance Issues
+=== Troubleshooting Performance Issues
 
 #### High Latency Diagnosis
 1. **TTFT > ITL**: Memory bandwidth or model loading bottleneck
@@ -307,7 +307,7 @@ image::guidellm-ui.png[]
 2. **Variable between runs**: External factors or inadequate warm-up
 3. **Degradation over time**: Memory leaks or resource exhaustion
 
-## Uninstall Model Deployment
+== Uninstall Model Deployment
 
 We will need the available GPU resources for the next module. To uninstall our model deployment and free up these resources, run the following command:
 
@@ -316,6 +316,6 @@ We will need the available GPU resources for the next module. To uninstall our m
 helm uninstall granite-2b
 ----
 
-## Summary
+== Summary
 
 This activity demonstrated how to evaluate system performance using GuideLLM with a default vLLM configuration. By configuring vLLM more precisely or your chosen inference runtime, you can better align model serving with application needs—whether you’re optimizing for cost, speed, or user experience.

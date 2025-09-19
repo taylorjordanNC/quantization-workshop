@@ -1,7 +1,7 @@
 :imagesdir: ../assets/images
 
 [#deploy-rhoai]
-# Deploy model with vLLM on OpenShift AI with Helm, kserve and model car
+= Deploy model with vLLM on OpenShift AI with Helm, kserve and model car
 
 1. Log into your provided OpenShift environment. 
 
@@ -42,9 +42,9 @@ View our available modelcars here: https://quay.io/repository/redhat-ai-services
 
 NOTE: For the purposes of this workshop, we will not adjust our preset configuration and model, but we want you to know how it's possible! 
 
-## Deploy the vLLM model car chart
+== Deploy the vLLM model car chart
 
-## Log into the OpenShift via the CLI
+== Log into the OpenShift via the CLI
 
 Find your OpenShift login command in the openshift console by going to the admin dropdown and selecting **Copy Login Command**.
 
@@ -54,7 +54,7 @@ Once selected, you will click **Display token** and copy the oc login command pr
 
 image::oc-login.png[]
 
-### Add the redhat-ai-services helm chart repository
+=== Add the redhat-ai-services helm chart repository
 
 [source,console,role=execute,subs=attributes+]
 ----
@@ -62,7 +62,7 @@ helm repo add redhat-ai-services https://redhat-ai-services.github.io/helm-chart
 helm repo update redhat-ai-services
 ----
 
-### Deploy helm chart in llm-hosting namespace
+=== Deploy helm chart in llm-hosting namespace
 
 Run the following commands to deploy our vLLM-kserve helm chart. The chart version we are using is published, but we will be deploying it from our cloned repository so that we may view files and make any changes if desired.
 

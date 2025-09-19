@@ -6,7 +6,7 @@
 
 You've mastered model quantization techniques that deliver transformative cost and efficiency improvements. Through hands-on implementation with LLM Compressor, you've gained expertise in compressing models while preserving quality.
 
-## Key Takeaway
+== Key Takeaway
 
 Model quantization delivers the most impactful optimization gains - transforming expensive, large-scale deployments into cost-effective, accessible solutions. Combined with your vLLM optimization expertise, you can now deliver end-to-end performance improvements that fundamentally change the economics of LLM deployment.
 

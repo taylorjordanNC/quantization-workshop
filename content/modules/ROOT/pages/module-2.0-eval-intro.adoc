@@ -1,11 +1,11 @@
 :imagesdir: ../assets/images
 
 [#model-evaluation]
-# Evaluating Model Performance with GuideLLM
+= Evaluating Model Performance with GuideLLM
 
 Accuracy scores and leaderboard metrics can seem impressive, but production-grade AI demands more. True success comes from evaluating models in real-world scenarios, where performance, reliability, and user satisfaction are non-negotiable.
 
-## In this section
+== In this section
 
 We'll now move beyond leaderboard metrics to explore:
 

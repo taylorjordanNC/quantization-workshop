@@ -1,3 +1,4 @@
+[#quantization-technical]
 = Model optimization
 
 * Deep dive presentation 
@@ -116,7 +117,7 @@ In addition to the improvements described above, it also offers the following ad
 
 [IMPORTANT]
 ====
-Red Hat Consulting and customers **should not perform custom quantization runs without an existing, validated recipe**. Only use the provided recipes for supported models and quantization schemes. Custom quantization is complex, error-prone and can result in significant accuracy loss or unsupported models.
+The upstream community provides recipes for supported models and quantization schemes. Custom quantization is complex, error-prone and can result in significant accuracy loss or unsupported models.
 ====
 
 [cols="1,2,3,4", options="header"]

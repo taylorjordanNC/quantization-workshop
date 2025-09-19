@@ -1,5 +1,7 @@
 :imagesdir: ../assets/images
-= Weights and Activation Quantization (W4A16)
+
+[#quantization-setup]
+= Preparing for Quantization: Setting up the Environment
 
 == Learning Objectives
 
@@ -219,7 +221,7 @@ image::quant-git-clone-1.png[title="Open Git Clone Interface in Jupyter", link=s
 +
 [source,sh,role=execute]
 ----
-https://github.com/redhat-ai-services/etx-llm-optimization-and-inference-leveraging.git
+https://github.com/taylorjordanNC/quantization-workshop.git
 ----
 +
 [.bordershadow]
@@ -237,29 +239,6 @@ Before starting the quantization exercise, verify:
 * Data connections are accessible from the workbench environment
 * GPU resources are available for quantization tasks
 
-== Exercise: Quantize the Model with llm-compressor
-_Estimated time: 15-20 minutes (depending on model size and GPU performance)_
+=== Next Steps
 
-Now you'll perform the actual quantization using the provided Jupyter notebook.
-
-* Navigate to the `workshop_code/quantization/llm_compressor` folder
-* Open the notebook `weight_activation_quantization.ipynb`:
-
-[.bordershadow]
-image::quantization-int8-notebook.png[title="Weight Activation Quantization Notebook Ready to Execute", link=self, window=blank, width=100%]
-
-To execute the cells, you can select them and either click on the **play** icon or press **Shift + Enter**:
-[.bordershadow]
-image::quantization-notebook-cell-status.png[title="How to Execute Notebook Cells Using Play Button", link=self, window=blank, width=100%]
-
-When the cell is being executed, you can see **[*]**. Once the execution has completed, you will see a number instead of the *, e.g., **[1]**:
-[.bordershadow]
-image::quantization-notebook-execute-cell.png[title="Cell Execution Status Indicators in Notebook", link=self, window=blank, width=100%]
-
-When you complete the notebook exercises, close the notebook and continue to the next module.
-
-IMPORTANT: Once you complete this exercise and you no longer need the workbench, ensure you **stop it** so that the associated GPU gets freed and can be utilized to serve the model.
-[.bordershadow]
-image::quantization-notebook-workbench-done.png[title="Access Workbench Actions Menu", link=self, window=blank, width=100%]
-[.bordershadow]
-image::quantization-notebook-workbench-stop.png[title="Stop Workbench to Free GPU Resources", link=self, window=blank, width=100%]
+Now that we have our environment set up, we can move on to the quantization pipeline.
