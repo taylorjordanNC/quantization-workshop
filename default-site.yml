@@ -2,7 +2,7 @@
 site:
   title: Fast, Cheap and Accurate: Optimizing LLM Inference
   # url: https://taylorjordanNC.github.io/etx-llm-optimization-and-inference-leveraging
-  start_page: modules:ROOT:index.adoc
+  start_page: modules::index.adoc
 
 content:
   sources:
