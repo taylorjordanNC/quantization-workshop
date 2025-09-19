@@ -5,10 +5,10 @@
 * xref:module-2.0-eval-intro.adoc#model-evaluation[Module 2: Performance & Accuracy Evaluation]
 ** xref:module-2.1-eval-performance.adoc#eval-performance[Evaluating Model Performance]
 ** xref:module-2.2-eval-conclusion.adoc#eval-conclusion[Module 2 Conclusion]
-* xref:module-3.0-quantization-intro.adoc#quantization-intro[Module 4: Model Quantization]
+* xref:module-3.0-quantization-intro.adoc#quantization-intro[Module 3: Model Quantization]
 ** xref:module-3.1-quantization.adoc#quantization-setup[Preparing for Quantization]
 ** xref:module-3.2-quantization.adoc#quantization-implementation[Weights and Activation Quantization]
 ** xref:module-3.3-quantization-test.adoc#quantization-testing[Deploying and Testing Quantized Model]
-** xref:module-3.4-quantization-conclusion.adoc#quantization-conclusion[Module 4 Conclusion]
+** xref:module-3.4-quantization-conclusion.adoc#quantization-conclusion[Module 3 Conclusion]
 * Reference Materials
 ** xref:reference-quantization-technical.adoc#quantization-technical[Technical Quantization Reference]

@@ -21,7 +21,7 @@ You will learn to deploy models efficiently, evaluate performance, and implement
 
 * **1.1 OpenShift AI Deployment**: Deploy a Gen AI model with vLLM as the inference runtime on an OpenShift AI cluster. 
 
-**Key Skills**: 
+**Key Skills**: Model deployment, Helm charts, OpenShift AI platform, inference server configuration
 
 === 📊 Module 2: Performance & Accuracy Evaluation  
 **Measure and benchmark LLM systems for production readiness**
@@ -32,21 +32,12 @@ You will learn to deploy models efficiently, evaluate performance, and implement
 
 **Key Skills**: Performance testing, quality assessment, benchmarking methodologies, production readiness validation
 
-=== ⚡ Module 3: vLLM Optimization
-**Maximize inference performance through tuning and configuration**
-
-* **3.1 Performance Tuning**: Hands-on optimization of granite-3.3-8b-instruct for minimal latency in chat applications
-* **3.2 Configuration Strategies**: Master vLLM parameters, memory management, and batching for optimal performance
-* **3.3 Scaling Techniques**: Implement strategies for high-throughput serving and resource efficiency
-
-**Key Skills**: Performance optimization, parameter tuning, inference scaling, latency reduction
-
-=== 🔬 Module 4: Model Quantization
+=== 🔬 Module 3: Model Quantization
 **Reduce model size and memory requirements without sacrificing quality**
 
-* **4.1 Quantization Fundamentals**: Understand W4A16, W8A8 schemes and their impact on performance and accuracy
-* **4.2 Implementation Labs**: Hands-on quantization using LLM Compressor with SmoothQuant and GPTQ techniques  
-* **4.3 Production Pipelines**: Build automated quantization workflows using OpenShift AI and evaluate results
+* **3.1 Quantization Fundamentals**: Understand W4A16, W8A8 schemes and their impact on performance and accuracy
+* **3.2 Implementation Labs**: Hands-on quantization using LLM Compressor with SmoothQuant and GPTQ techniques  
+* **3.3 Production Pipelines**: Build automated quantization workflows using OpenShift AI and evaluate results
 
 **Key Skills**: Model compression, quantization techniques, memory optimization, automated ML pipelines
 
@@ -75,6 +66,6 @@ By the end of this workshop, you will be able to:
 * **Prerequisites**: Basic familiarity with containers, Kubernetes, and machine learning concepts
 * **Environment**: Access to OpenShift cluster with GPU resources
 
+== Ready to Start?
 
-
-
+Navigate through the modules using the sidebar menu, or jump directly to xref:module-1.0-intro-setup.adoc[Module 1: LLM Deployment] to begin your hands-on journey with vLLM optimization!

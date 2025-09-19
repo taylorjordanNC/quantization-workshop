@@ -1,6 +1,6 @@
 :imagesdir: ../assets/images
 [#quantization-intro]
-= Module 4: Model Quantization
+= Module 3: Model Quantization
 
 == Introduction
 

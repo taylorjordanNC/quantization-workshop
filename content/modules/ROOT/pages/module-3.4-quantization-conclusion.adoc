@@ -1,6 +1,6 @@
 :imagesdir: ../assets/images
 [#quantization-conclusion]
-= Module 4 Conclusion: Model Quantization Mastery
+= Module 3 Conclusion: Model Quantization Mastery
 
 == What You've Accomplished
 
