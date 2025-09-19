@@ -1,62 +1,85 @@
 :imagesdir: ../assets/images
 
 [#quantization-testing]
-= Deploying and Testing our Quantized Model
+= (OPTIONAL) Deploying and Testing a Quantized Model
 
-Now that we have quantized our model, we can deploy it and run another benchmark test.
+If you have extra time and wish to experiment, navigate back to Module 2.1 and select a quantized model to deploy from the model-care catalog: https://quay.io/repository/redhat-ai-services/modelcar-catalog?tab=tags&tag=latest. Deploy using Helm, and locally modify your values.yaml file to deploy.
 
-== Deploying the Model from MinIO
+Once deployed, you may rerun the benchmark pipeline with the new model. Stay in the `vllm` project.
 
-1. Go to the `quantization` project in the OpenShift AI dashboard.
+// == Deploy a Quantized Granite Model with Helm 
 
-2. Click on the Models tab. Enable `Single-Model Serving`.
+// NOTE: Ensure you're in the **quantization-workshop** cloned repository in your local environment before continuing.
 
-3. Click on the `Deploy Model` button.
-+
-image::deploy_model.png[]
-+
-4. Fill the form with the following values (anything not specified below, leave as is):
+// Switch back to the vllm project.
 
-* Model deployment name: `quantized-granite`
-* Serving runtime: `vLLM NVIDIA GPU ServingRuntime for KServe`
-* Accelerator: `NVIDIA GPU`
-* Model route: Check `Make deployed models available through an external route.`
-* Source model location:
-** Check `Existing connection`
-** Select `minio-models`
-** Path: `granite-int4-pipeline`
+// [source,console,role=execute,subs=attributes+]
+// ----
+// oc project vllm
+// ----
 
-5. Your model is deployed when you see a green check mark in the UI. 
+// Deploy the quantized model using a new values file.
 
-image::success.png[]
+// [source,console,role=execute,subs=attributes+]
+// ----
+// helm install quantized-granite redhat-ai-services/vllm-kserve --version 0.5.11 \
+//   -f workshop_code/deploy_vllm/vllm_rhoai_custom_2/values.yaml 
+// ----
 
-== Benchmarking our new quantized model
+// Now that we have quantized our model, we can deploy it and run another benchmark test.
 
-Set your external model inference endpoint.
+// == Deploying the Model from MinIO
 
-[source,console,role=execute,subs=attributes+]
-----
-export INFERENCE_ENDPOINT=$(oc get inferenceservice quantized-granite -n quantization -o jsonpath='{.status.url}')
-----
+// 1. Go to the `quantization` project in the OpenShift AI dashboard.
 
-Now, complete another benchmark run, with a specified output path to `html` format. We will simulate the RAG use case again so you may compare against your last results more easily in a browser.
+// 2. Click on the Models tab. Enable `Single-Model Serving`.
 
-[source,console,role=execute]
-----
-tkn pipeline start guidellm-benchmark-pipeline-ui -n vllm \
-  --param target=http://quantized-granite.quantization.svc.cluster.local/v1 \
-  --param model-name="quantized-granite" \
-  --param processor="ibm-granite/granite-3.3-2b-instruct" \
-  --param data-config="prompt_tokens=4096,output_tokens=512" \
-  --param max-seconds="30" \
-  --param huggingface-token="" \
-  --param api-key="" \
-  --param rate="2" \
-  --param rate-type="sweep" \
-  --param max-concurrency="10" \
-  --param output-path="benchmarks.html" \
-  --workspace name=shared-workspace,claimName=guidellm-output-pvc
-----
+// 3. Click on the `Deploy Model` button.
+// +
+// image::deploy_model.png[]
+// +
+// 4. Fill the form with the following values (anything not specified below, leave as is):
+
+// * Model deployment name: `quantized-granite`
+// * Serving runtime: `vLLM NVIDIA GPU ServingRuntime for KServe`
+// * Accelerator: `NVIDIA GPU`
+// * Model route: Check `Make deployed models available through an external route.`
+// * Source model location:
+// ** Check `Existing connection`
+// ** Select `minio-models`
+// ** Path: `granite-int4-pipeline`
+
+// 5. Your model is deployed when you see a green check mark in the UI. 
+
+// image::success.png[]
+
+// == Benchmarking our new quantized model
+
+// Set your external model inference endpoint.
+
+// [source,console,role=execute,subs=attributes+]
+// ----
+// export INFERENCE_ENDPOINT=$(oc get inferenceservice quantized-granite -n quantization -o jsonpath='{.status.url}')
+// ----
+
+// Now, complete another benchmark run, with a specified output path to `html` format. We will simulate the RAG use case again so you may compare against your last results more easily in a browser.
+
+// [source,console,role=execute]
+// ----
+// tkn pipeline start guidellm-benchmark-pipeline-ui -n vllm \
+//   --param target=$INFERENCE_ENDPOINT/v1 \
+//   --param model-name="quantized-granite" \
+//   --param processor="ibm-granite/granite-3.3-2b-instruct" \
+//   --param data-config="prompt_tokens=4096,output_tokens=512" \
+//   --param max-seconds="30" \
+//   --param huggingface-token="" \
+//   --param api-key="" \
+//   --param rate="2" \
+//   --param rate-type="sweep" \
+//   --param max-concurrency="10" \
+//   --param output-path="benchmarks.html" \
+//   --workspace name=shared-workspace,claimName=guidellm-output-pvc
+// ----
 
 
 

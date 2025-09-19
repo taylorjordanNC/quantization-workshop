@@ -1,4 +1,4 @@
-= {lab_name}
+= Fast, Cheap and Accurate: Optimizing LLM Inference
 
 Welcome to our vLLM and Quantization hands-on workshop, where you will gain technical experience serving models with vLLM and optimizing performance with quantization!
 
