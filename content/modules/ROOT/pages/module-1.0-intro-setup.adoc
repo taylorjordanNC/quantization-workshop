@@ -8,9 +8,8 @@ This module covers deploying a Gen AI model with vLLM as the inference runtime o
 
 == Learning Objectives
 
-- Deploy vLLM across three enterprise platforms
+- Deploy vLLM on OpenShift AI 
 - Understand platform-specific configuration requirements
-- Compare deployment architectures and operational trade-offs
 - Establish foundation for performance evaluation and optimization
 
 == Prerequisites
