@@ -1,109 +1,71 @@
-=== Getting Started
+= Fast, Cheap and Accurate: Optimizing LLM Inference
 
-This template is designed to be used as a base for your showroom lab guides.
+Welcome to our vLLM and Quantization hands-on workshop, where you will gain technical experience serving models with vLLM and optimizing performance with quantization!
 
-The content is built using Antora, a static site generator for creating documentation sites from AsciiDoc documents.
+== Prerequisite Knowledge
 
-This git repo template was created to make it easy for you to start developing your lab instructions.
+This workshop is designed for those who have some experience with the following topics and technologies:
 
-Features:
+* Kubernetes / OpenShift
+* Gen AI models and inference
+* Helm charts
 
-. 0% cruft
-. Red Hat Demo Platform UI Bundle default
-. Dev Mode extension that displays the asciidoc attributes you have to work with
-. Content is generated using Antora, a static site generator for creating documentation sites from AsciiDoc documents.
+== Module Overview
 
-== Getting Started
+This workshop provides hands-on experience with enterprise vLLM deployment, benchmarking and optimization techniques, and quantization. 
 
-=== Using Containers (Recommended)
+You will learn to deploy models efficiently, evaluate performance, and implement advanced optimization techniques to reduce costs while maintaining quality.
 
-In order to test and develop on your local machine, you can use a specially built container with Podman or Docker as follows.
+=== 🚀 Module 1: LLM Deployment
+**Deploy a model with vLLM on OpenShift AI**
 
-. Create a git repo from this template
-.. Suggested naming: `showroom_<lab-name>`
-. Clone your new repo and `cd` into it
-. When you make changes to the content, all you need is to kill the container and run it again.
-+
-[source,sh]
-----
-podman run --rm --name antora -v $PWD:/antora -p 8080:8080 -i -t ghcr.io/juliaaano/antora-viewer
-----
+* **1.1 OpenShift AI Deployment**: Deploy a Gen AI model with vLLM as the inference runtime on an OpenShift AI cluster. 
 
-For SELinux environments, `:z` may need to be appended to the volume mount:
+**Key Skills**: Model deployment, Helm charts, OpenShift AI platform, inference server configuration
 
-----
-podman run --rm --name antora -v $PWD:/antora:z -p 8080:8080 -i -t ghcr.io/juliaaano/antora-viewer
-----
+=== 📊 Module 2: Performance & Accuracy Evaluation  
+**Measure and benchmark LLM systems for production readiness**
 
-Live-reload is not supported.
+* **2.1 Performance Evaluation**: Use GuideLLM to measure latency, throughput, and resource utilization under realistic workloads
+* **2.2 Accuracy Assessment**: Evaluate model quality, response relevance, and task-specific performance metrics
+* **2.3 Evaluation Best Practices**: Establish benchmarking workflows and continuous performance monitoring
 
-=== Using Local Files (Less Recommended)
+**Key Skills**: Performance testing, quality assessment, benchmarking methodologies, production readiness validation
 
-. Create a git repo from this template
-. Clone the repo and `cd` into it
-. Run ./utilities/lab-serve
-. Open http://localhost:8080 in your browser
-. Run ./utilities/lab-build to build your html
+=== 🔬 Module 3: Model Quantization
+**Reduce model size and memory requirements without sacrificing quality**
 
-To rebuild your html, run `./utilites/build`.
+* **3.1 Quantization Fundamentals**: Understand W4A16, W8A8 schemes and their impact on performance and accuracy
+* **3.2 Implementation Labs**: Hands-on quantization using LLM Compressor with SmoothQuant and GPTQ techniques  
+* **3.3 Production Pipelines**: Build automated quantization workflows using OpenShift AI and evaluate results
 
-== Editing Files
+**Key Skills**: Model compression, quantization techniques, memory optimization, automated ML pipelines
 
-Now you are ready to go!
-You can start editing the files in the `content/modules/ROOT/pages/` directory.
+=== 📚 Reference Materials
+**Business and technical guides for real-world application**
 
-Many modern editors such as Visual Studio Code offer live Asciidoc Preview extensions.
+* **Enterprise Qualification Guide**: Framework for identifying and qualifying LLM optimization opportunities with enterprise clients
+* **Technical Deep Dives**: Comprehensive technical documentation on quantization methods and optimization strategies
+* **Model Comparison Examples**: Pre-compressed model performance comparisons and selection criteria
 
-=== Understanding the Basic Template Directory Structure
+=== 🎯 Learning Outcomes
 
-[source,sh]
-----
-./content/modules/ROOT/
-├── assets
-│   └── images                       # Images used in your content
-│       └── example-image.png
-├── examples                         # You can add downloadable assets here
-│   └── example-bash-script.sh       # e.g. an example bash script
-├── nav.adoc                         # Navigation for your lab
-├── pages                            # Your content goes here
-│   ├── index.adoc                   # First page of your lab, e.g. overview etc
-│   ├── module-01.adoc
-│   └── module-02.adoc               # Sample lab has 2 modules including index.adoc
-└── partials                         # You can add partials here, reusable content inserted inline into your modules
-    └── example_partial.adoc
-----
+By the end of this workshop, you will be able to:
 
-== Adding Additional Links
+* Deploy production-ready LLM inference servers across multiple platforms
+* Evaluate and benchmark LLM systems for performance and accuracy
+* Optimize vLLM configurations for specific use cases and constraints  
+* Implement quantization techniques to reduce costs by 50-75%
+* Build automated optimization pipelines for enterprise deployment
+* Qualify and position LLM optimization opportunities with technical confidence
 
-You can add links to external content in the convenient "Links" drop-down on the upper-right of the Showroom Summit 2024 UI.
+=== ⏱️ Workshop Format
 
-../content/antora.yml
-[source,yaml]
-----
-asciidoc:
-  attributes:
-    page-links:
-    - url: https://redhat.com
-      text: Red Hat
-----
+* **Duration**: Full-day technical workshop
+* **Format**: Mix of theory, hands-on labs, and real-world scenarios
+* **Prerequisites**: Basic familiarity with containers, Kubernetes, and machine learning concepts
+* **Environment**: Access to OpenShift cluster with GPU resources
 
-image::ui-links.png[]
+== Ready to Start?
 
-== Dev Mode
-
-As a convenience to developers, the Dev Mode Extention (disabled by default) displays the asciidoc attributes you have to work with while writing your lab instructions.
-
-. Disable/Enable Dev Mode by changing `enabled: true` or `enabled: false`
-+
-.default-site.yml
-[source,yaml]
-----
-extensions:
-  - id: dev-mode
-    require: ./content/lib/dev-mode.js
-    enabled: false
-----
-
-. Produces
-+
-image::dev-mode.png[]
+Navigate through the modules using the sidebar menu, or jump directly to xref:module-1.0-intro-setup.adoc[Module 1: LLM Deployment] to begin your hands-on journey with vLLM optimization!
